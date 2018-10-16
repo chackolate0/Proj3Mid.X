@@ -79,7 +79,9 @@
 #include "uart.h"
 
 /* TODO:  Include other files here if needed. */
-
+#define SYS_FREQ (80000000L)
+#define INT_SEC 10
+#define CORE_TICK_RATE (SYS_FREQ/2/INT_SEC)
 
 int main(void){
     ACL_Init();
@@ -88,8 +90,18 @@ int main(void){
     LCD_Init();
     SSD_Init();
     SWT_Init();
+    int ms;
 //    UART_Init(baud);
 //    I2C_Init(i2cFreq);
     
-    LCD_WriteStringAtPos("Team:1 SENS:", 0, 0);
+    while(1){
+        LCD_WriteStringAtPos("Team:1 SENS:", 0, 0);
+        ms=AIC_Val()/900;
+    }
+}
+
+void __ISR(CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
+    mCTClearIntFlag();
+    
+    UpdateCoreTimer(CORE_TICK_RATE);
 }
