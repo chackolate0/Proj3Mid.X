@@ -3,8 +3,9 @@ Proj3.c  \
 config.h  \
 utils.h  \
 acl.h  \
-aic.h  \
- btn.h  \
+adc.h  \
+ aic.h  \
+btn.h  \
 i2c.h  \
 lcd.h  \
 ssd.h  \

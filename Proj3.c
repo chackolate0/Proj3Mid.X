@@ -51,6 +51,10 @@
 #pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
 #pragma config CP = OFF                 // Code Protect (Protection Disabled)
 
+#ifndef _SUPPRESS_PLIB_WARNING
+#define _SUPPRESS_PLIB_WARNING
+#endif
+
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
 
@@ -70,6 +74,7 @@
 #include <stdio.h>
 #include "utils.h"
 #include "acl.h"
+#include "adc.h"
 #include "aic.h"
 #include "btn.h"
 #include "i2c.h"
@@ -83,25 +88,74 @@
 #define INT_SEC 10
 #define CORE_TICK_RATE (SYS_FREQ/2/INT_SEC)
 
+int ms;
+
 int main(void){
+    OpenCoreTimer(CORE_TICK_RATE);
+    INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
+    mConfigIntCoreTimer(CT_INT_ON | CT_INT_PRIOR_5 | CT_INT_SUB_PRIOR_0);
+    INTEnableSystemMultiVectoredInt();
     ACL_Init();
     AIC_Init();
     BTN_Init();
     LCD_Init();
     SSD_Init();
     SWT_Init();
-    int ms;
 //    UART_Init(baud);
 //    I2C_Init(i2cFreq);
+    char accelData[80];
+    char sensitivity;
+    char stringVal[80];
+    int accelX=10;
+    int accelY=6;
+    int accelZ=14;
+    enum states{XY, ZX, YZ};
+    int axisState = XY;
     
     while(1){
-        LCD_WriteStringAtPos("Team:1 SENS:", 0, 0);
-        ms=AIC_Val()/900;
+        sprintf(stringVal,"Team: 1  SENS: %dG", sensitivity);
+        LCD_WriteStringAtPos(stringVal, 0, 0);
+        ms=AIC_Val()*(900/1024)+100;
+        
+        if(BTN_GetValue('R')){
+            delay_ms(1000);
+            if(axisState == YZ)
+                axisState = XY;
+            else
+                axisState++;
+        }
+        else if(BTN_GetValue('L')){
+            delay_ms(1000);
+            if(axisState == XY)
+                axisState = YZ;
+            else
+                axisState--;
+        }
+
+        switch(axisState){
+            case XY: sprintf(accelData, "X:%.3f Y:%.3f", accelX, accelY);
+            break;
+            case ZX: sprintf(accelData, "Z:%.3f X: %.3f", accelZ, accelX);
+            break;
+            case YZ: sprintf(accelData, "Y:%.3f Z: %.3f", accelY, accelZ);
+            break;
+        }
+        LCD_WriteStringAtPos(accelData,1,0);
     }
+    
+    
 }
 
-void __ISR(CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
+void __ISR(_CORE_TIMER_VECTOR, ipl5) _CoreTimerHandler(void){
     mCTClearIntFlag();
     
     UpdateCoreTimer(CORE_TICK_RATE);
+}
+
+void delay_ms(int ms) {
+    int i, counter;
+    for (counter = 0; counter < ms; counter++) {
+        for (i = 0; i < 300; i++) {
+        } //software delay ~1 millisec 
+    }
 }
