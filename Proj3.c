@@ -80,11 +80,16 @@
 
 /* TODO:  Include other files here if needed. */
 
-ACL_Init();
-AIC_Init();
-BTN_Init();
-LCD_Init();
-SSD_Init();
-SWT_Init();
-UART_Init(baud);
-I2C_Init(i2cFreq);
+
+int main(void){
+    ACL_Init();
+    AIC_Init();
+    BTN_Init();
+    LCD_Init();
+    SSD_Init();
+    SWT_Init();
+//    UART_Init(baud);
+//    I2C_Init(i2cFreq);
+    
+    LCD_WriteStringAtPos("Team:1 SENS:", 0, 0);
+}
