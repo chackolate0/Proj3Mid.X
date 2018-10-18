@@ -88,7 +88,7 @@
 #define INT_SEC 10
 #define CORE_TICK_RATE (SYS_FREQ/2/INT_SEC)
 
-int ms;
+int potVal;
 
 int main(void){
     OpenCoreTimer(CORE_TICK_RATE);
@@ -101,9 +101,8 @@ int main(void){
     LCD_Init();
     SSD_Init();
     SWT_Init();
-//    UART_Init(baud);
-//    I2C_Init(i2cFreq);
-    char accelData[80];
+    //UART_Init(baud);
+    char coords[80];
     char sensitivity;
     char stringVal[80];
     int accelX=10;
@@ -111,12 +110,13 @@ int main(void){
     int accelZ=14;
     enum states{XY, ZX, YZ};
     int axisState = XY;
+    unsigned char accelData[06];
     
     while(1){
         sprintf(stringVal,"Team: 1  SENS: %dG", sensitivity);
         LCD_WriteStringAtPos(stringVal, 0, 0);
-        ms=AIC_Val()*(900/1024)+100;
-        
+        potVal=AIC_Val()*(900/1024)+100;
+        I2C_Init(potVal);
         if(BTN_GetValue('R')){
             delay_ms(1000);
             if(axisState == YZ)
@@ -132,15 +132,19 @@ int main(void){
                 axisState--;
         }
 
+        if(BTN_GetValue('U')){
+            ACL_ReadRawValues(accelData);
+        }
+
         switch(axisState){
-            case XY: sprintf(accelData, "X:%.3f Y:%.3f", accelX, accelY);
+            case XY: sprintf(coords, "X:%.3f Y:%.3f", accelX, accelY);
             break;
-            case ZX: sprintf(accelData, "Z:%.3f X: %.3f", accelZ, accelX);
+            case ZX: sprintf(coords, "Z:%.3f X: %.3f", accelZ, accelX);
             break;
-            case YZ: sprintf(accelData, "Y:%.3f Z: %.3f", accelY, accelZ);
+            case YZ: sprintf(coords, "Y:%.3f Z: %.3f", accelY, accelZ);
             break;
         }
-        LCD_WriteStringAtPos(accelData,1,0);
+        LCD_WriteStringAtPos(coords,1,0);
     }
     
     
